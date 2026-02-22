@@ -3,74 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cek Akun HidupCuan</title>
+    <title>Cek User Neoparty</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); width: 100%; max-width: 360px; text-align: center; }
-        h2 { margin-bottom: 20px; color: #333; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; margin-bottom: 15px; outline: none; transition: 0.2s; box-sizing: border-box; }
-        input:focus { border-color: #007bff; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        #resBox { margin-top: 25px; display: none; padding: 15px; border-radius: 8px; background: #f0f9ff; border: 1px solid #b9dfff; }
-        .label { font-size: 12px; color: #55acee; font-weight: bold; text-transform: uppercase; }
-        .nick { font-size: 20px; font-weight: bold; color: #1a1a1a; margin-top: 5px; word-break: break-all; }
-        .error { color: #e74c3c; font-size: 14px; margin-top: 15px; font-weight: 500; }
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #fdfae6; }
+        .box { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; border: 2px solid #fd7100; }
+        input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #fd7100; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        #result { margin-top: 20px; padding: 15px; background: #e0f7fa; border-radius: 8px; display: none; color: #064b7f; }
+        .nickname { font-size: 20px; font-weight: 800; display: block; }
+        .error { color: red; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div class="box">
-    <h2>Cek Nickname</h2>
-    <input type="number" id="targetID" placeholder="Masukkan Player ID...">
-    <button id="checkBtn" onclick="mulaiCek()">Periksa ID</button>
+    <h3 style="margin:0; color:#fd7100">Cek ID Neoparty</h3>
+    <input type="number" id="player_id" placeholder="Masukkan ID (e.g. 2216545)">
+    <button id="btn" onclick="periksa()">Periksa ID</button>
 
-    <div id="resBox">
-        <div class="label">Nickname Ditemukan</div>
-        <div class="nick" id="nickResult"></div>
+    <div id="result">
+        <small>Username Player:</small>
+        <span class="nickname" id="nick"></span>
     </div>
-    <div id="errorText" class="error"></div>
+    <div id="errMsg" class="error"></div>
 </div>
 
 <script>
-async function mulaiCek() {
-    const id = document.getElementById('targetID').value;
-    const btn = document.getElementById('checkBtn');
-    const resBox = document.getElementById('resBox');
-    const nickResult = document.getElementById('nickResult');
-    const errorText = document.getElementById('errorText');
+async function periksa() {
+    const id = document.getElementById('player_id').value;
+    const btn = document.getElementById('btn');
+    const resultDiv = document.getElementById('result');
+    const nickSpan = document.getElementById('nick');
+    const errorDiv = document.getElementById('errMsg');
 
-    if (!id) {
-        errorText.innerText = "Masukkan ID dulu!";
-        return;
-    }
+    if(!id) return;
 
     // Reset UI
-    errorText.innerText = "";
-    resBox.style.display = "none";
-    btn.disabled = true;
+    errorDiv.innerText = "";
+    resultDiv.style.display = "none";
     btn.innerText = "Mengecek...";
+    btn.disabled = true;
 
     try {
         const response = await fetch('/api/cek', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ PlayerID: id })
+            body: JSON.stringify({ player_id: id })
         });
 
-        const json = await response.json();
+        const res = await response.json();
 
-        if (json.status === "success" && json.data) {
-            nickResult.innerText = json.data.Nick;
-            resBox.style.display = "block";
+        // En === 0 berarti sukses
+        if (res.En === 0 && res.Data) {
+            nickSpan.innerText = res.Data.player_nick;
+            resultDiv.style.display = "block";
         } else {
-            errorText.innerText = "ID " + id + " tidak ditemukan.";
+            errorDiv.innerText = "ID tidak ditemukan!";
         }
     } catch (e) {
-        errorText.innerText = "Server error. Coba lagi nanti.";
+        errorDiv.innerText = "Terjadi kesalahan server.";
     } finally {
-        btn.disabled = false;
         btn.innerText = "Periksa ID";
+        btn.disabled = false;
     }
 }
 </script>
